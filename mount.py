@@ -78,6 +78,48 @@ z = cross2.rotate(center2, DR, -dr)
 #z = Part.show(cross1)
 #z = Part.show(cross2)
 
+
+postA = Part.makeCylinder(  #lower
+      PostLowerDia/2.0,
+      PostLowerHeight,   
+      center1,   #pnt
+      DR    #direction
+      )
+postB = Part.makeCylinder(  #upper
+      PostUpperDia/2.0,
+      PostUpperHeight,  
+      center1,    #pnt
+      DR     #direction
+      )
+postC = Part.makeBox(         
+      PostUpperDia,
+      PostUpperDia,
+      PostUpperHeight,     
+      center1 + V(-PostUpperDia/2.0, PostUpperDia*0.2, PostLowerHeight + 2.0),
+      DR  
+      ) 
+postC = postB.cut([postC]) # good shelf
+#Part.show(postC)
+
+chip =  Part.makeBox(         
+      PostUpperDia,
+      PostUpperDia,
+      PostUpperHeight/3,     
+      center1 + V(PostUpperDia/2.0, PostUpperDia/2.5, PostLowerHeight + 2.0),
+      DR + V(0, -0.15, 0)
+      ).common(postB )
+
+flange = chip.rotate(  # good chip. Rotate ~midpoint pushes top in and flange out
+         center1 + V(0, 0, PostUpperHeight - PostUpperDia), 
+         V(1,0,0), 
+         10)
+#Part.show(flange)  #good
+#Part.show(postB)
+
+post = postA.fuse([postC, flange])
+#Part.show(post)
+
+
 posts   = []
    
 for c in [center1, center2, center3, center4] :
@@ -88,13 +130,23 @@ for c in [center1, center2, center3, center4] :
       DR    #direction
       )
    )
-   posts.append(Part.makeCylinder(  #upper
+   z = Part.makeCylinder(  #upper
       PostUpperDia/2.0,
       PostUpperHeight,  
       c,    #pnt
       DR     #direction
       )
+   c = Part.makeBox(         
+      PostUpperHeight,     
+      PostUpperDia,
+      PostUpperDia,
+      c + V(0, PostUpperDia/3, PostLowerHeight + 2.0),
+      DR   
+      ) 
+   z.cut(c)
+   posts.append(z)
    )
+
 #for p in posts :
 #   z = Part.show(p)
 
