@@ -6,8 +6,8 @@
 # Open GUI interface and copy/paste to python console
 # or
 #   FreeCAD  --run  mount.py
-# or (see  https://wiki.freecad.org/index.php?title=Flatpak )
-# /usr/bin/flatpak --branch=stable --arch=x86_64 run --command=FreeCADCmd org.freecad.FreeCAD -c <mount.py
+# or with flatpal (see  https://wiki.freecad.org/index.php?title=Flatpak )
+#   /usr/bin/flatpak --branch=stable --arch=x86_64 run --command=FreeCADCmd org.freecad.FreeCAD -c <mount.py
 
 # The mount.stl output file goes to ./mount.stl  
 # which will be ~/mount.stl if run in freecad started from the desktop menu.
@@ -45,7 +45,65 @@ PostUpperHeight   = FrameHeight + 5.0 + 6.0  #CHECK
 
 
 #######################################
-######     construction            #####
+######       function             #####
+#######################################
+
+def mk_post(center, direction = DR, origin = ORIGIN ):
+   ''' 
+   make  mount post at center in direction
+   e.g.
+   post = mk_post(V(0, 0, 0)])
+   Result is a single mounting post.   
+   ''' 
+   
+   postA = Part.makeCylinder(  #lower
+         PostLowerDia/2.0,
+         PostLowerHeight,   
+         center,   #pnt
+         DR    #direction
+         )
+   postB = Part.makeCylinder(  #upper
+         PostUpperDia/2.0,
+         PostUpperHeight,  
+         center,    #pnt
+         DR     #direction
+         )
+   postC = Part.makeBox(         
+         PostUpperDia,
+         PostUpperDia,
+         PostUpperHeight,     
+         center + V(-PostUpperDia/2.0, PostUpperDia*0.2, PostLowerHeight + 2.0),
+         DR  
+         ) 
+   postC = postB.cut([postC]) # post with cutout for flange
+   #Part.show(postC)
+   
+   chip =  Part.makeBox(        # piece for flange  
+         PostUpperDia,
+         PostUpperDia,
+         PostUpperHeight/3,     
+         center + V(PostUpperDia/2.0, PostUpperDia/2.5, PostLowerHeight + 2.0),
+         DR + V(0, -0.15, 0)
+         ).common(postB )
+   
+   flange = chip.rotate(  # Rotate ~midpoint pushes top in and flange out
+            center + V(0, 0, PostUpperHeight - PostUpperDia), 
+            V(1,0,0), 
+            10)
+   
+   #Part.show(flange)
+   #Part.show(postB)
+   
+   post = postA.fuse([postC, flange])
+   #Part.show(post)
+   
+   return(post)
+
+# post1 = mk_post(center1)
+# Part.show(post1)
+
+#######################################
+######     construction           #####
 #######################################
 
 diagional = (Length**2 + Width**2)**0.5
@@ -78,83 +136,13 @@ z = cross2.rotate(center2, DR, -dr)
 #z = Part.show(cross1)
 #z = Part.show(cross2)
 
-
-postA = Part.makeCylinder(  #lower
-      PostLowerDia/2.0,
-      PostLowerHeight,   
-      center1,   #pnt
-      DR    #direction
-      )
-postB = Part.makeCylinder(  #upper
-      PostUpperDia/2.0,
-      PostUpperHeight,  
-      center1,    #pnt
-      DR     #direction
-      )
-postC = Part.makeBox(         
-      PostUpperDia,
-      PostUpperDia,
-      PostUpperHeight,     
-      center1 + V(-PostUpperDia/2.0, PostUpperDia*0.2, PostLowerHeight + 2.0),
-      DR  
-      ) 
-postC = postB.cut([postC]) # good shelf
-#Part.show(postC)
-
-chip =  Part.makeBox(         
-      PostUpperDia,
-      PostUpperDia,
-      PostUpperHeight/3,     
-      center1 + V(PostUpperDia/2.0, PostUpperDia/2.5, PostLowerHeight + 2.0),
-      DR + V(0, -0.15, 0)
-      ).common(postB )
-
-flange = chip.rotate(  # good chip. Rotate ~midpoint pushes top in and flange out
-         center1 + V(0, 0, PostUpperHeight - PostUpperDia), 
-         V(1,0,0), 
-         10)
-#Part.show(flange)  #good
-#Part.show(postB)
-
-post = postA.fuse([postC, flange])
-#Part.show(post)
-
-
-posts   = []
-   
-for c in [center1, center2, center3, center4] :
-   posts.append(Part.makeCylinder(  #lower
-      PostLowerDia/2.0,
-      PostLowerHeight,   
-      c,   #pnt
-      DR    #direction
-      )
-   )
-   z = Part.makeCylinder(  #upper
-      PostUpperDia/2.0,
-      PostUpperHeight,  
-      c,    #pnt
-      DR     #direction
-      )
-   c = Part.makeBox(         
-      PostUpperHeight,     
-      PostUpperDia,
-      PostUpperDia,
-      c + V(0, PostUpperDia/3, PostLowerHeight + 2.0),
-      DR   
-      ) 
-   z.cut(c)
-   posts.append(z)
-   )
-
-#for p in posts :
-#   z = Part.show(p)
-
 mount = cross1.fuse(cross2)
-for p in posts :
+  
+for c in [center1, center2, center3, center4] :
+   p = mk_post(c)
    mount = mount.fuse(p)
 
-#z = Part.show(mount)
+#Part.show(mount)
 
 #######################################
 #####  Mesh
