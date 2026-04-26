@@ -33,7 +33,7 @@ Length            = 66.5   # hole centers
 FrameWidth        = 3.0 
 FrameHeight       = 3.0 
 PostLowerDia      = 3.0
-PostUpperDia      = 1.8     #CHECK DIA OF MOUNT HOLES
+PostUpperDia      = 1.8    #drill is 2.2, but then plated CHECK DIA OF MOUNT HOLES
 PostLowerHeight   = FrameHeight + 5.0   
 PostUpperHeight   = FrameHeight + 5.0 + 6.0  #CHECK 
 
@@ -160,5 +160,6 @@ print("Now to generate gcode do")
 #print("slic3r " + outfile)  This does not work well. It does not seem to use defaults set for printer.
 print("start  slic3r ")
 print("   and open file " + outfile)
+print("   Be sure to generate support material Settings> Print Settings")
 print("or examine with ")
 print("meshlab " + outfile + " & ")
